@@ -10,6 +10,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: nexora-auth
+    description: NEXORA identity and private-area access
+  - name: nexora-platform
+    description: NEXORA platform-owner operations
+  - name: nexora-company
+    description: Tenant-scoped company operations
 paths:
   /healthz:
     get:
@@ -24,6 +30,123 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /nexora/session:
+    get:
+      operationId: getNexoraSession
+      tags: [nexora-auth]
+      summary: Get the authenticated NEXORA access scope
+      responses:
+        "200":
+          description: Authenticated identity and application role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NexoraSession"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /nexora/session/logout-audit:
+    post:
+      operationId: auditNexoraLogout
+      tags: [nexora-auth]
+      summary: Record a logout request before Clerk invalidates the session
+      responses:
+        "204":
+          description: Logout event recorded
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /nexora/company/profile:
+    get:
+      operationId: getNexoraCompanyProfile
+      tags: [nexora-company]
+      summary: Get the company linked to the authenticated identity
+      responses:
+        "200":
+          description: The caller's authorized company profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NexoraCompanyProfile"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: No active company membership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /nexora/platform/tenants:
+    get:
+      operationId: listNexoraTenants
+      tags: [nexora-platform]
+      summary: List companies for the NEXORA platform owner
+      responses:
+        "200":
+          description: Companies visible to the platform owner
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NexoraTenant"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Platform-owner permission required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    post:
+      operationId: createNexoraTenant
+      tags: [nexora-platform]
+      summary: Create a company as the NEXORA platform owner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NexoraTenantInput"
+      responses:
+        "201":
+          description: Company created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NexoraTenant"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Platform-owner permission required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +156,54 @@ components:
           type: string
       required:
         - status
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    NexoraSession:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [platform_owner, company_admin, employee, unassigned]
+        tenantId:
+          type: ["string", "null"]
+          format: uuid
+        tenantName:
+          type: ["string", "null"]
+      required: [role, tenantId, tenantName]
+    NexoraTenant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, createdAt]
+    NexoraTenantInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 140
+      required: [name]
+    NexoraCompanyProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          type: string
+          enum: [company_admin, employee]
+      required: [id, name, role]
 
