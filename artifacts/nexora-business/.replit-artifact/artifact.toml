@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "NEXORA Business"
+description = "A premium responsive SaaS foundation for NEXORA Business, with a public presentation page, a login experience, and separate protected shells for Nexora Admin and client companies. The first phase focuses on structure and security boundaries without fake accounts, data, or payments."
+version = "1.0.0"
+id = "artifacts/nexora-business"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22637
+
+[services.development]
+run = "pnpm --filter @workspace/nexora-business run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nexora-business", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/nexora-business/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22637"
+BASE_PATH = "/"

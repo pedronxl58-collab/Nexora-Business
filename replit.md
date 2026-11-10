@@ -1,6 +1,6 @@
-# [Project name]
+# NEXORA Business
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+NEXORA Business is a responsive SaaS foundation for a public company site and future, isolated business workspaces.
 
 ## Run & Operate
 
@@ -22,23 +22,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/nexora-business/` — public site, login state, and private panel shells
+- `artifacts/nexora-business/ARCHITECTURE.md` — access boundaries and multi-tenant design
+- `artifacts/nexora-business/src/auth/` — private-area access policy; no authentication provider is connected yet
+- `lib/db/src/schema/nexora.ts` — PostgreSQL tenant, membership, platform-admin, and module schema
+- `lib/api-spec/openapi.yaml` — shared API contract source of truth
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Private routes deny access unless a server-verified principal is provided; frontend checks are only a navigation layer, never the security boundary.
+- Platform administrators are modeled separately from tenant memberships. A tenant role never grants platform-admin access.
+- Tenant IDs must come from a verified membership on the server, never from a browser-supplied ID.
+- No sample accounts, operational rows, payments, or integrations are created in the initial foundation.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+The app currently has a public presentation page, an explicitly unavailable login form, and protected visual shells for Nexora Admin and company workspaces. Financeiro, Vendas, Estoque, Funcionários, Operações, Logística, and Indicadores are marked as future modules.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Do not present fictional records as real data or add simulated payments and integrations.
+- Keep credentials out of source code and enforce tenant separation for future company data.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Authentication is not connected; the login form is intentionally disabled and every private route denies access by default.
+- Do not treat the browser access policy as authorization. Verify the session, platform role, and tenant membership in the API before returning private data.
+- Apply tenant filters to every company-scoped query; consider PostgreSQL Row-Level Security as an additional layer when the server transaction model is established.
 
 ## Pointers
 
